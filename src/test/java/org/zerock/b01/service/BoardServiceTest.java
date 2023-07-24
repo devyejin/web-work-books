@@ -37,7 +37,6 @@ class BoardServiceTests {
 
         boardService.modify(boardDTO);
 
-        
     }
 
 }
