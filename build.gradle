@@ -47,6 +47,8 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
+    implementation 'org.modelmapper:modelmapper:3.1.0'
+
     //querydsl
     implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
 
