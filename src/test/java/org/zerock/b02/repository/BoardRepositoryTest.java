@@ -110,4 +110,32 @@ class BoardRepositoryTest {
 
         Page<Board> boards = boardRepository.search1(pageable);
     }
+
+    @Test
+    void testSearchAll() {
+        //given
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("bno").descending());
+
+        String[] types = {"t","c","w"};
+        String keyword = "1";
+
+        Page<Board> result = boardRepository.searchAll(types, keyword, pageable);
+
+        //total pge(총 페이지 수)
+        log.info(result.getTotalPages());
+
+        //page size(한 페이지 당 구성되는 게시물 수)
+        log.info(result.getSize());
+
+        //pageNumber(현재 페이지 번호)
+        log.info(result.getNumber());
+
+        //prev next 유무 ( = 기호가 아니라 : 기호임)
+        log.info("result.hasPrevious : {}, result.hasNext : {}", result.hasPrevious(),result.hasNext());
+
+        result.getContent().forEach(board -> log.info(board));
+
+    }
+
+
 }
