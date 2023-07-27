@@ -47,4 +47,10 @@ class BoardServiceImplTest {
         Assertions.assertThat(boardDTO.getTitle()).isEqualTo(boardService.readOne(101L).getTitle());
 
     }
+
+    @Test
+    void testList() {
+
+        page
+    }
 }
