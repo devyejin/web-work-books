@@ -1,6 +1,7 @@
 package org.zerock.b01.repository.search;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPQLQuery;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -8,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.zerock.b01.domain.Board;
 import org.zerock.b01.domain.QBoard;
+import org.zerock.b01.domain.QReply;
 import org.zerock.b01.dto.BoardListReplyCountDTO;
 
 import java.util.List;
@@ -90,8 +92,54 @@ public class BoardSearchImpl extends QuerydslRepositorySupport implements BoardS
 
     @Override
     public Page<BoardListReplyCountDTO> searchWithReplyCount(String[] types, String keyword, Pageable pageable) {
-       
-        return null;
+       //양방향으로 잡지않고 querydsl 이용
+        QBoard board = QBoard.board;
+        QReply reply = QReply.reply;
+
+        JPQLQuery<Board> query = from(board);
+        query.leftJoin(reply).on(reply.board.eq(board));
+
+        query.groupBy(board);
+
+        //pagination처리
+        if((types != null && types.length > 0) && keyword != null) {
+            BooleanBuilder booleanBuilder = new BooleanBuilder();
+
+            for(String type : types ) {
+                switch (type) {
+                    case "t" :
+                        booleanBuilder.or(board.title.contains(keyword));
+                        break;
+                    case "c" :
+                        booleanBuilder.or(board.content.contains(keyword));
+                        break;
+                    case "w" :
+                        booleanBuilder.or(board.writer.contains(keyword));
+                        break;
+                }
+            }
+            query.where(booleanBuilder);
+        }
+        
+        query.where(board.bno.gt(0L));
+
+
+        //Projection : JPQL결가를 바로 DTO로 처리하는 기능제공
+        //Projection.bean()이용하면 쿼리 결과를 바로 DTO로 처리해줌, 이용하기위해서는 JPQlQuery의 select() 이용
+        JPQLQuery<BoardListReplyCountDTO> dtoQuery = query.select(Projections.bean(BoardListReplyCountDTO.class,
+                board.bno,
+                board.title,
+                board.writer,
+                board.regDate,
+                reply.count().as("replyCount")));
+
+        this.getQuerydsl().applyPagination(pageable,dtoQuery);
+        
+        List<BoardListReplyCountDTO> dtoList = dtoQuery.fetch();
+
+        long count = dtoQuery.fetchCount();
+
+        return new PageImpl<>(dtoList, pageable, count);
     }
 
 
