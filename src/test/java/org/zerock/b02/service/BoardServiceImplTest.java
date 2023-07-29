@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.zerock.b02.dto.BoardDTO;
+import org.zerock.b02.dto.PageRequestDTO;
+import org.zerock.b02.dto.PageResponseDTO;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -51,6 +53,18 @@ class BoardServiceImplTest {
     @Test
     void testList() {
 
-        page
+        //given (테스트용 데이터) 타이틀,내용,작성자 중 키워드 1이 포함된 글 가져오기
+        PageRequestDTO pageRequestDTO = PageRequestDTO.builder()
+                .type("tcw")
+                .keyword("1")
+                .page(1)
+                .size(10)
+                .build();
+
+        //when
+        PageResponseDTO<BoardDTO> responseDTO = boardService.list(pageRequestDTO);
+
+        //then
+        log.info("responseDTO={}",responseDTO);
     }
 }
