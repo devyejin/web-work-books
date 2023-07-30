@@ -79,7 +79,7 @@
         alert(errorMsg);
     }
 
-    //클릭 이벤트
+    //수정 버튼
     const link = [[${pageRequestDTO.getLink()}]]
     const formObj = document.querySelector("#f1");
 
@@ -94,4 +94,25 @@
         formObj.submit();
 
     },false);
+
+//     삭제 버튼
+    document.querySelector(".removeBtn").addEventListener("click", e => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        formObj.action = `/board/remove`;
+        formObj.method = 'post';
+        formObj.submit();
+    },false);
+
+
+//     목록 버튼
+    document.querySelector(".listBtn").addEventListener("click", e=> {
+        e.preventDefault();
+        e.stopPropagation();
+
+        formObj.reset();
+        self.location = `/board/list?${link}`;
+    },false)
+
 </script>
