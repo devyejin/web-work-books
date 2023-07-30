@@ -70,11 +70,56 @@ public class BoardController {
         return "redirect:/board/list";
     }
 
-    @GetMapping("/read")
+    @GetMapping({"/read", "/modify"})
     public void read(Long bno, PageRequestDTO pageRequestDTO, Model model) {
         BoardDTO boardDTO = boardService.readOne(bno);
         log.info("boardDTO={}", boardDTO);
 
         model.addAttribute("dto",boardDTO);
+    }
+
+    //수정 후에는 검색조건이 변경되기때문에, list페이지로 보낼 때 평범한 첫 페이지로
+    @PostMapping("/modify")
+    public String modify(PageRequestDTO pageRequestDTO,
+                       @Valid BoardDTO boardDTO,
+                       BindingResult bindingResult,
+                       RedirectAttributes redirectAttributes) {
+
+        log.info("boardDTO={}", boardDTO);
+
+        if(bindingResult.hasErrors()) {
+            log.info("has errors.... check please"); //에러정보를 담아서 다시 modify페이지로
+
+            String link = pageRequestDTO.getLink(); // link에는 bno정보는 없는데...?
+
+            //addFlashAttribute의 경우, 리다이렉트요청시 까지만 생존해서 url 쿼리파라미터로 안담김
+            redirectAttributes.addFlashAttribute("errors",bindingResult.getAllErrors());
+            redirectAttributes.addAttribute("bno", boardDTO.getBno());
+
+            //link, bno 정보가 GET요청으로 가니까 쿼리파라미터에 담기는거같음!
+            //예)http://localhost:8080/board/modify?page=1&size=10&bno=206
+            return "redirect:/board/modify?"+link;
+        }
+
+        boardService.modify(boardDTO);
+
+        redirectAttributes.addFlashAttribute("result","modified");
+        redirectAttributes.addAttribute("bno", boardDTO.getBno());
+
+        //예) http://localhost:8080/board/read?bno=206
+        return "redirect:/board/read";
+
+    }
+
+    @PostMapping("/remove")
+    public String remove(Long bno, RedirectAttributes redirectAttributes) {
+
+        log.info("call remove post .... " + bno);
+
+        boardService.remove(bno);
+
+        redirectAttributes.addFlashAttribute("result", "removed");
+
+        return "redirect:/board/list";
     }
 }

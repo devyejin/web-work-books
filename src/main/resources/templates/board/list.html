@@ -51,11 +51,13 @@
                             <th scope="col">RegDate</th>
                         </tr>
                         </thead>
-                        <tbody>
-                        <!-- 첫 번쨰 줄에 올릴 칼럼의 데이터 -->
+                        <tbody th:with="link = ${pageRequestDTO.getLink()}">
+                        <!-- 반복문으로 데이터 출력시켜버리기  -->
                         <tr th:each="dto:${responseDTO.dtoList}"  >
                           <th scope="row">[[${dto.bno}]]</th>
-                          <td>[[${dto.title}]]</td>
+                          <td>
+                              <a th:href="|@{/board/read(bno=${dto.bno})}&${link}|">[[${dto.title}]]</a>
+                          </td>
                           <td>[[${dto.writer}]]</td>
                           <td>[[${#temporals.format(dto.regDate, 'yyyy-MM-dd')}]]</td>
 
