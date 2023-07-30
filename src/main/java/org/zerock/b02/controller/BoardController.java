@@ -64,8 +64,17 @@ public class BoardController {
         log.info("boardDTO={}",boardDTO);
 
         Long bno = boardService.register(boardDTO);
-        redirectAttributes.addFlashAttribute("result",bno); //<- 정상 등록됐는데 굳이 왜?
+        redirectAttributes.addFlashAttribute("result",bno); //<- 정상 등록됐는데 굳이 왜? => 모달 창에 활용
+        //addFlashAttribute에 담긴 데이터는 쿼리 스트링으로 처리되지 않아 url에는 보이지않음, 일회성 데이터 전송
 
         return "redirect:/board/list";
+    }
+
+    @GetMapping("/read")
+    public void read(Long bno, PageRequestDTO pageRequestDTO, Model model) {
+        BoardDTO boardDTO = boardService.readOne(bno);
+        log.info("boardDTO={}", boardDTO);
+
+        model.addAttribute("dto",boardDTO);
     }
 }

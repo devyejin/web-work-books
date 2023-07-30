@@ -94,6 +94,24 @@
         </div>
     </div>
 
+    <div class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modal title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p th:text="|${result}번 게시물이 등록되었습니다.|"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script layout:fragment="script" th:inline="javascript">
@@ -122,5 +140,16 @@
         e.stopPropagation();
 
         self.location ='/board/list'; <!-- 데이터 정보 유지X, 그냥 board/list 리다이렉트임 -->
-    },false)
+    },false);
+
+
+    <!-- 정상 처리시 동작 모달-->
+    //show modal, 정상 처리시 modal 보이도록 -> 부트스트랩 함수 이용
+    const result = [[${result}]];
+
+    const modal = new bootstrap.Modal(document.querySelector(".modal"));
+
+    if(result) {
+        modal.show();
+    }
 </script>
