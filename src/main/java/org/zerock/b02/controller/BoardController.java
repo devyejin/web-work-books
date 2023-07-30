@@ -49,11 +49,13 @@ public class BoardController {
         log.info("board register call! ");
 
         //에러처리 먼저, 에러 -> 등록페이지로
+        //난 에러처리 다른 방식으로 하고 싶음
+
         if(bindingResult.hasErrors()) {
             log.error("BoardDTO has errors........");
 
             //등록하던 페이지로 어느 부분에 에러가 있는지 알려주기 (RedirectAttributes : 리다이렉트시 데이터 전달하는 객체(model) )
-            redirectAttributes.addAttribute("errors", bindingResult.getAllErrors());
+            redirectAttributes.addFlashAttribute("errors", bindingResult.getAllErrors());
 
             return "redirect:/board/register";
 
