@@ -2,6 +2,7 @@ package org.zerock.b02.repository;
 
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.zerock.b02.domain.Board;
+import org.zerock.b02.dto.BoardListReplyCountDTO;
 
 import java.util.List;
 import java.util.Optional;
@@ -135,6 +137,29 @@ class BoardRepositoryTest {
 
         result.getContent().forEach(board -> log.info(board));
 
+    }
+
+    @Test
+    @DisplayName("검색조건 넣고 검색해서 목록 반환할건데, reply 달린 갯수도 함께 출력")
+    void testSearchWithReplyCount() {
+        //given
+        String[] types = {"t","w","c"}; // title, writer, content 다 포함해서 검색 가정
+        String keyword = "1";
+        Pageable pageable = PageRequest.of(0,10,Sort.by("bno").descending());
+
+        //when
+        Page<BoardListReplyCountDTO> result = boardRepository.searchWithReplyCount(types, keyword, pageable);
+
+        //then
+        Assertions.assertNotNull(result); //뭐라도 걸리는 데이터 있겠지..
+
+        log.info("totalPage={}",result.getTotalPages());
+        log.info("size={}", result.getSize()); //page size
+        log.info("page number={}", result.getNumber()); //page number
+        log.info("result.hasPrevious()={}, result.hasNext()={}", result.hasPrevious(),result.hasNext());
+
+
+        result.getContent().forEach(board -> log.info(board));
     }
 
 

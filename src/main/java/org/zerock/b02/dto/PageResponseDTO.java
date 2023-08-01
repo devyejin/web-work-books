@@ -1,8 +1,6 @@
 package org.zerock.b02.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.List;
 
@@ -11,6 +9,9 @@ import java.util.List;
  */
 @Getter
 @ToString
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PageResponseDTO<E> {
     private int page;
     private int size;

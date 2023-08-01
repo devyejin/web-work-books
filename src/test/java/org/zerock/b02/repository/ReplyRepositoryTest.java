@@ -26,14 +26,14 @@ class ReplyRepositoryTest {
 
     @Test
     void testInsert() {
-        Long bno = 205L;
+        Long bno = 100L;
 
         Board board = Board.builder().bno(bno).build();
 
         Reply reply = Reply.builder()
                 .board(board)
-                .replyText("댓글 추가요추가요.....")
-                .replyer("replyer3")
+                .replyText("댓글 추가요추가요추가요추가요.....")
+                .replyer("replyer333333")
                 .build();
 
         replyRepository.save(reply);
