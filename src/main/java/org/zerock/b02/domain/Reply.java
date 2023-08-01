@@ -33,4 +33,9 @@ public class Reply extends BaseEntity{
     private String replyText;
 
     private String replyer;
+
+    //댓글은 텍스트만 수정 가능 -> 메서드로 제공
+    public void changeText(String text) {
+        this.replyText = text;
+    }
 }
