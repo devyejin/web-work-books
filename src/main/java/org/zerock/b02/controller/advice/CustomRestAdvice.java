@@ -2,6 +2,7 @@ package org.zerock.b02.controller.advice;
 
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 @Log4j2
@@ -54,5 +56,22 @@ public class CustomRestAdvice { //@valid 과정에서 예외가 생기면 알려
         errorMap.put("msg", "constraint fails");
         return ResponseEntity.badRequest().body(errorMap);
     }
+
+    @ExceptionHandler({
+            NoSuchElementException.class,
+            EmptyResultDataAccessException.class
+    })
+    @ResponseStatus(HttpStatus.EXPECTATION_FAILED) //417 요청 헤더의 요구값을 만족시키지 못해서 서버에서 요청 거부
+    public ResponseEntity<Map<String,String>> handlerNoSuchElement(Exception e) {
+        log.error(e);
+
+        HashMap<String, String> errorMap = new HashMap<>();
+
+        errorMap.put("time", ""+System.currentTimeMillis());
+        errorMap.put("msg", "No Such Element Exception");
+
+        return ResponseEntity.badRequest().body(errorMap);
+    }
+
 
 }
