@@ -1,6 +1,7 @@
 package org.zerock.b02.controller;
 
 
+import com.sun.tools.jconsole.JConsoleContext;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -56,7 +57,9 @@ public class ReplyController {
     @GetMapping(value = "/list/{bno}")
     public PageResponseDTO<ReplyDTO> getList(@PathVariable("bno") Long bno,
                                              PageRequestDTO pageRequestDTO) {
+        log.info("pageRequestDTO={}", pageRequestDTO.getPage());
         PageResponseDTO<ReplyDTO> responseDTO = replyService.getListOfBoard(bno, pageRequestDTO);
+
         return responseDTO;
 
     }

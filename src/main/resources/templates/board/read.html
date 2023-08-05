@@ -68,6 +68,7 @@
                 <button class="btn btn-info  addReplyBtn">ADD REPLY</button>
             </div>
             <ul class="list-group replyList">
+<!--                여긴 이벤트 + 비동기로 실시간으로 목록 생성됨 -->
             </ul>
         </div>
     </div>
@@ -77,6 +78,58 @@
             </ul>
         </div>
     </div>
+
+<!--    reply 등록 모달 창    -->
+    <div class="modal registerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Register Reply</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Reply Text</span>
+                        <input type="text" class="form-control replyText" >
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Replyer</span>
+                        <input type="text" class="form-control replyer" >
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary registerBtn">Register</button>
+                    <button type="button" class="btn btn-outline-dark closeRegisterBtn" >Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end regist modal -->
+
+<!--    수정 모달 창 -->
+    <div class="modal modifyModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title replyHeader"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Reply Text</span>
+                        <input type="text" class="form-control modifyText" >
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-info modifyBtn">Modify</button>
+                    <button type="button" class="btn btn-danger removeBtn">Remove</button>
+                    <button type="button" class="btn btn-outline-dark closeModifyBtn">Close</button>
+                </div>
+            </div>
+        </div>
+    </div> <!--modifyModal -->
+
+
 
     <!--비동기처리를 동기처럼 코드작성하기 쉽도록 도와주는 라이브러리 => axios -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -96,9 +149,9 @@
     function printList(dtoList) { //댓글 목록 출력
         let str = '';
 
-        if(dtoList && dtoList.length > 0) {
+        if (dtoList && dtoList.length > 0) {
 
-            for(const dto of dtoList) {
+            for (const dto of dtoList) {
 
                 str += `<li class="list-group-item d-flex replyItem">
                             <span class="col-2">${dto.rno}</span>
@@ -119,7 +172,7 @@
         let pageStr = '';
 
         if (data.prev) {
-            pageStr += `<li class="page-item"><a class="page-link" data-page="${data.start - 1}">PREV</a></li>`
+            pageStr += `<li class="page-item"><a class="page-link" data-page="${data.start - 1}">PREV</a></li>` //<-- 내가 19에서 prev눌러도 start-1이니까 ㅇㅋㅇㅋ
         }
 
         for (let i = data.start; i <= data.end; i++) {
@@ -141,18 +194,153 @@
     // })
 
     function printReplies(page, size, goLast) { //js는 매개변수인자 안넘겨도 에러안남
+        // console.log(`bno : ${bno}`);
 
-        getList(bno, page, size, goLast).then(
+        getList({bno, page, size, goLast}).then(
             data => {
                 //데이터 가지고오면, 댓글 데이터 출력, 댓글 페이징처리 호출
                 printList(data.dtoList); //목록 처리
                 printPages(data); //페이지처리
             }).catch(
-            exception => console.eror(exception)
+            exception => console.error(exception)
         )
     }
 
-    printReplies(1, 10)
+    printReplies(1, 10, true);
 
+
+    //댓글 등록 모달
+    const registerModal = new bootstrap.Modal(document.querySelector(".registerModal"));
+
+    //registerModal
+    const registerBtn = document.querySelector(".registerBtn");
+    const replyText = document.querySelector(".replyText");
+    const replyer = document.querySelector(".replyer");
+    const closeRegisterBtn = document.querySelector(".closeRegisterBtn");
+
+    //ADD REPLY 버튼 클릭시 모달 창 띄우는 이벤트
+    document.querySelector(".addReplyBtn").addEventListener("click", e => {
+        registerModal.show();
+    },false);
+
+    //모달 창 닫는 이벤트
+    closeRegisterBtn.addEventListener("click", e => {
+        registerModal.hide();
+    },false);
+
+    //registerBtn 등록 버튼 이벤트 처리
+    registerBtn.addEventListener("click", e => {
+        //사용자가 입력한 값을 객체에 저장하고
+        const replyObj = {
+            bno : bno,
+            replyText : replyText.value, //<- input태그에 value로 안되있는데 읽나?
+            replyer : replyer.value
+        }
+
+        //저장하는 메서드 호출(-> 비동기로 컨트롤러 호출)
+        addReply(replyObj).then(result => {
+            alert(result.rno);
+            registerModal.hide();
+            replyText.value = '';
+            replyer.value='';
+            printReplies(1,10,true); //댓글 목록 갱신
+        }).catch(exception => {
+            alert("occur exception!!");
+        }, false);
+
+    })
+
+    //댓글 페이지 이동
+    let page = 1
+    let size = 10
+
+    replyPaging.addEventListener("click", e => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const target = e.target;
+
+        if(!target || target.tagName !== 'A') return;
+
+        const pageNum = target.getAttribute('data-page');//눌린 <a>태그의 data-page 값 읽어오기
+        page = pageNum;
+        printReplies(page,size);
+
+    },false);
+
+
+    //수정 모달창
+    const modifyModal = new bootstrap.Modal(document.querySelector(".modifyModal"));
+
+    const replyHeader = document.querySelector(".replyHeader") //여기에 수정되는 댓글 번호 출력
+    const modifyText = document.querySelector(".modifyText")
+    const modifyBtn = document.querySelector(".modifyBtn")
+    const removeBtn = document.querySelector(".removeBtn")
+    const closeModifyBtn = document.querySelector(".closeModifyBtn")
+
+
+    //특정 댓글 클릭시 모달창 보여주는 이벤트
+    //댓글 목록은 실시간으로 생성되므로 바깥 <ul className="list-group replyList"> 태그에 이벤트 걸어줌
+    replyList.addEventListener("click", e => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const target = e.target;
+
+        if(!target || target.tagName !== 'SPAN') return;
+
+        const rno = target.getAttribute("data-rno");
+
+        if(!rno) return;
+
+        getReply(rno).then(reply => {
+            //댓글 내용을 모달에 채워서 보여줌 (값 부터 채운 채우고 -> 모달 창 보여주기)
+            console.log(reply);
+            replyHeader.innerHTML = reply.rno;
+            modifyText.value = reply.replyText;
+            modifyModal.show();
+        }).catch(exception => alert('occur modify modal error!!'))
+    },false);
+
+
+    //수정 모달 창 modifyBtn 버튼 이벤트
+    modifyBtn.addEventListener("click",  e => {
+        //데이터 객체에 담은 다음
+        const replyObj = {
+            bno,
+            rno:replyHeader.innerHTML,
+            replyText:modifyText.value
+        }
+
+        //수정 메서드 비동기 호출(controller호출)
+        modifyReply(replyObj).then(result => {
+            alert(`${result.rno} 댓글이 수정되었습니다.`);
+            replyText.value = ''; //모달창 비워주기
+            modifyModal.hide();
+            printReplies(page, size,true); //수정하고 최신목록으로 보낼거면 3번째인자로 true넣어주고, 그냥 자기 위치로 둘 거면 3번째 인자 안넣고, 책은 안넣었는데 난 넣을래 ㅋㅋ
+            }).catch(exception => {
+                console.log("occur reply modify error !!!");
+        })
+    },false);
+
+
+    //수정 모달 창 close 버튼 이벤트
+    closeModifyBtn.addEventListener("click", e => {
+        modifyModal.hide();
+    })
+
+
+
+    removeBtn.addEventListener("click", e => {
+        removeReply(replyHeader.innerHTML).then(result => {
+            alert(`${result.rno}번 댓글이 삭제되었습니다.`);
+            replyText.value=``;
+            modifyModal.hide();
+
+            //page = 1; //이 부분이 없으면 해당rno있던 페이지로 감(근데 난 맨뒤로 보낼래)
+
+            printReplies(page,size,true);
+        }).catch(exception => console.log(exception));
+    },false)
 
 </script>

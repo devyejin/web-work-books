@@ -1,5 +1,7 @@
 package org.zerock.b02.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.validation.constraints.NotEmpty;
@@ -25,7 +27,12 @@ public class ReplyDTO {
 
     @NotEmpty
     private String replyer;
-    private LocalDateTime regDate, modDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") //RestAPI 응답시 JsonFormatter 적용
+    private LocalDateTime regDate;
+
+    @JsonIgnore //응답 처리시 미출력
+    private LocalDateTime modDate;
 
 
 }

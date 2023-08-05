@@ -16,7 +16,41 @@ async function get1(bno) {
 }
 
 // goLast : 마지막 댓글 페이지 호출되도록 하는 변수
-async function getList(bno, page, size, goLast) {
-    const result = await axios.get(`/replies/list/${bno}`,{param : {page, size}});
+// 마지막 댓글 페이지가 열리도록 할 때 size(출력 데이터 수)와 total(총 데이터 수)를 가지고 페이지 계산해서 리턴
+async function getList({bno, page, size, goLast}){
+
+    const result = await axios.get(`/replies/list/${bno}`,{params : {page, size}});
+
+    if(goLast) {
+        const total = result.data.total;
+        const lastPage = parseInt(Math.ceil(total/size));
+        console.log(lastPage);
+        return getList({bno:bno, page:lastPage, size:size});
+    }
+
     return result.data;
 }
+
+async function addReply(replyObj) {
+    const response = await axios.post('/replies/',replyObj);  //getList()랑 달리 param이 한개라서 생략한듯
+    return response.data;
+}
+
+//댓글 조회 (get)
+async function getReply(rno) {
+    const response = await axios.get(`/replies/${rno}`);
+    return response.data;
+}
+
+//댓글 수정 (put)
+async function modifyReply(replyObj) {
+    const response = await axios.put(`/replies/${replyObj.rno}`,replyObj); //2번쨰 인자는 param 바디로 전송인듯
+    return response.data;
+}
+
+//댓글 삭제 기능 delete 요청
+async function removeReply(rno) {
+    const response = await axios.delete(`/replies/${rno}`);
+    return response.data;
+}
+
