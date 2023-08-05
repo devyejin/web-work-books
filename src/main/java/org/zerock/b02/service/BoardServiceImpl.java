@@ -92,14 +92,19 @@ public class BoardServiceImpl implements BoardService {
         String[] types = pageRequestDTO.getTypes();
         String keyword = pageRequestDTO.getKeyword();
         Pageable pageable = pageRequestDTO.getPageable("bno");
+        log.info("pageRequestDTO={}",pageRequestDTO);  //<--여기까지는 잘 받음
 
         Page<BoardListReplyCountDTO> result = boardRepository.searchWithReplyCount(types, keyword, pageable);
 
-        //Page객체를 PageResponseDTO로 반환해야하니까
-        return PageResponseDTO.<BoardListReplyCountDTO>withAll()
+
+        PageResponseDTO<BoardListReplyCountDTO> pageResponseDTO = PageResponseDTO.<BoardListReplyCountDTO>withAll() //<--여기서 문제가 있는거 같은데
                 .pageRequestDTO(pageRequestDTO)
                 .dtoList(result.getContent())
-                .total((int)result.getTotalElements())
+                .total((int) result.getTotalElements())
                 .build();
+
+        log.info("pageResponseDTO={}",pageResponseDTO);
+
+        return pageResponseDTO;
     }
 }

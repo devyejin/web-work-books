@@ -47,16 +47,16 @@ public class PageRequestDTO {
     public String getLink() {
         if(link == null) {
             StringBuilder builder = new StringBuilder();
-            builder.append("page="+this.page);
-            builder.append("&size="+this.size);
+            builder.append("page=").append(this.page);
+            builder.append("&size=").append(this.size);
 
             if(type != null && type.length() > 0) {
-                builder.append("&type="+type);
+                builder.append("&type=").append(type);
             }
 
             if(keyword != null) {
                 try {
-                    builder.append("&keyword="+ URLEncoder.encode(keyword,"UTF-8"));
+                    builder.append("&keyword=").append(URLEncoder.encode(keyword, "UTF-8"));
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }

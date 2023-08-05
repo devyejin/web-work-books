@@ -81,7 +81,7 @@
 
                             <th:block th:each="i: ${#numbers.sequence(responseDTO.start, responseDTO.end)}">
                                 <li th:class="${responseDTO.page == i}?'page-item active':'page-item'" >
-                                    <a class="page-link"  th:data-num="${i}"> [[${i}]] </a> <!-- data-num은 클릭하는 페이지 값 담음  -->
+                                    <a class="page-link"  th:data-num="${i}">[[${i}]]</a>
                                 </li>
                             </th:block>
 
