@@ -1,10 +1,9 @@
 package org.zerock.b02.repository;
 
 import lombok.extern.log4j.Log4j2;
-import org.junit.jupiter.api.Assertions;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
@@ -16,6 +15,7 @@ import org.zerock.b02.dto.BoardListReplyCountDTO;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -161,6 +161,28 @@ class BoardRepositoryTest {
 
         result.getContent().forEach(board -> log.info(board));
     }
+
+    @Test
+    void testInsertWithImages(){
+
+        //given
+        Board board = Board.builder()
+                .title("attach image test")
+                .content("첨부파일 이미지 테스트")
+                .writer("tester")
+                .build();
+        //when
+        for(int i=0; i<3; i++) {
+            board.addImage(UUID.randomUUID().toString(), "file"+i+".jpeg");
+        }
+        Board savedBoard = boardRepository.save(board);
+
+        //then
+        Assertions.assertThat(savedBoard.getImageSet().size()).isEqualTo(3);
+        savedBoard.getImageSet().forEach(image -> log.info(image));
+
+    }
+
 
 
 }
