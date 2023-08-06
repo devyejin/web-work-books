@@ -2,6 +2,7 @@ package org.zerock.b02.dto.upload;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.List;
  */
 @Getter
 @Setter
+@ToString
 public class UploadFileDTO {
 
     //여러개의 첨부파일 -> List
