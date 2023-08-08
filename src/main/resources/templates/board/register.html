@@ -33,6 +33,15 @@
 
                         </div>
 
+                        <!--    첨부파일 첨부를 위한 버튼 추가, 버튼 클릭시 모달 창  -->
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">Images</span>
+                            <div class="float-end uploadHidden">
+                                <button type="button" class="btn btn-primary uploadFileBtn">ADD Files</button>
+                            </div>
+                        </div>
+
+
                         <div class="my-4">
                             <div class="float-end">
                                 <button type="submit" class="btn btn-primary">Submit</button>
@@ -47,9 +56,78 @@
             </div><!--end card-->
         </div><!-- end col-->
     </div><!-- end row-->
-</div>
+
+    <!—- 첨부 파일 섬네일을 보여줄 부분 -->
+    <div class="row mt-3">
+        <div class="col ">
+            <div class="container-fluid d-flex uploadResult" style="flex-wrap: wrap;">
+            </div>
+        </div>
+    </div>
+
+    <!—- 첨부파일 추가를 위한 모달창 -->
+    <div class="modal uploadModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload File</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group mb-3">
+                        <input type="file" name="files" class="form-control" multiple >
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary uploadBtn">Upload</button>
+                    <button type="button" class="btn btn-outline-dark closeUploadBtn" >Close</button>
+                </div>
+            </div>
+        </div>
+    </div><!-- register modal -->
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script src="/js/upload.js"></script>
+
+</div> <!-- layout fragment end -->
 
 <script layout:fragment="script" th:inline="javascript">
+
+    //첨부파일 업로드 버튼 클릭시, 모달창 띄우는 이벤트
+    const uploadModal = new bootstrap.Modal(document.querySelector(".uploadModal"));
+
+    document.querySelector(".uploadFileBtn").addEventListener("click", e => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadModal.show()
+    },false);
+
+    //모달창의 Upload (".uploadBtn") 버튼에 비동기 이벤트처리걸어서 서버로 post요청
+    document.querySelector(".uploadBtn").addEventListener("click",e => {
+
+        const formObj = new FormData();
+
+        const fileInput = document.querySelector("input[name='files']"); //태그의 속성명 읽어올때 [] 이용
+        console.log(fileInput); //이건 dom
+        console.log(fileInput.files); //이렇게 해야 파일을 읽음
+
+        const files = fileInput.files;
+
+        for(let i = 0; i<files.length; i++) {
+            formObj.append("files",files[i]);
+        }
+
+        //서버에 연결요청 정의는 XX.js 파일에서, html파일에서는 응답받아서 처리
+        uploadToServer(formObj).then(result => {
+            console.log((result));
+            uploadModal.hide();
+        }).catch(exception => {
+            uploadModal.hide(); //업로드 실패하더라도 모달창은 닫아주기
+            //첨부파일 업로드 실패시 실패했다는거 알려주고싶은데... 나중에 추가하기!
+        })
+    },false)
+
 
 <!--  post 요청에서 error가 있어서 register페이지로 리다이렉트된 경우 -->
   const errors = [[${errors}]]; <!-- 객체를 변수에 담을 수 있으니까-->
@@ -63,6 +141,8 @@
     }
     alert(errorMsg);
   }
+
+
 
 
 </script>
