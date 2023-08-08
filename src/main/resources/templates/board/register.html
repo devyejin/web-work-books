@@ -44,7 +44,7 @@
 
                         <div class="my-4">
                             <div class="float-end">
-                                <button type="submit" class="btn btn-primary">Submit</button>
+                                <button type="submit" class="btn btn-primary submitBtn">Submit</button>
                                 <button type="reset" class="btn btn-secondary">Reset</button>
                             </div>
                         </div>
@@ -109,8 +109,8 @@
         const formObj = new FormData();
 
         const fileInput = document.querySelector("input[name='files']"); //태그의 속성명 읽어올때 [] 이용
-        console.log(fileInput); //이건 dom
-        console.log(fileInput.files); //이렇게 해야 파일을 읽음
+   //     console.log(fileInput); //이건 dom
+   //     console.log(fileInput.files); //이렇게 해야 파일을 읽음
 
         const files = fileInput.files;
 
@@ -120,13 +120,77 @@
 
         //서버에 연결요청 정의는 XX.js 파일에서, html파일에서는 응답받아서 처리
         uploadToServer(formObj).then(result => {
-            console.log((result));
+      //      console.log((result)); //결과가 json파일로 오기떄문에 json으로 보여짐
             uploadModal.hide();
+            for (const uploadResult of result) {
+                showUploadFile(uploadResult);
+            }
         }).catch(exception => {
             uploadModal.hide(); //업로드 실패하더라도 모달창은 닫아주기
             //첨부파일 업로드 실패시 실패했다는거 알려주고싶은데... 나중에 추가하기!
         })
     },false)
+
+
+    //업로드 성공시, 썸네일 보이는 기능 추가
+    const uploadResult = document.querySelector(".uploadResult");
+
+    function showUploadFile({uuid, fileName, link}) {
+
+        const str =`<div class="card col-4">
+            <div class="card-header d-flex justify-content-center">
+                ${fileName}
+                <button class="btn-sm btn-danger" onclick="javascript:removeFile('${uuid}', '${fileName}', this)" >X</button>
+            </div>
+            <div class="card-body">
+                 <img src="/view/${link}" data-src="${uuid+"_"+fileName}" >
+            </div>
+        </div><!-- card -->`
+
+        uploadResult.innerHTML += str;
+    }
+
+    //첨부파일 삭제 기능 (서버에서도, 화면에서도 삭제)
+    function removeFile(uuid, fileName, obj) {
+        console.log(`uuid : ${uuid}, fileName : ${fileName}, obj : ${obj}`);
+
+        //여긴 화면에서 삭제
+        const targetDiv = obj.closest(".card"); //가장가까운 class="card"를 찾음
+
+        //서버 호출하는 메서드 호출(upload.js에 def해놓음) - 서버에서 삭제
+        removeFileToServer(uuid,fileName).then(
+            data => targetDiv.remove()
+        );
+    }
+
+    //게시글 등록처리시 다 동작
+    document.querySelector(".submitBtn").addEventListener("click", e => {
+
+        console.log("너 호출된거 맞지...?");
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const target = document.querySelector(".uploadHidden");
+
+        const uploadFiles = uploadResult.querySelectorAll("img");
+
+        let str ='';
+
+        for(let i=0; i<uploadFiles.length; i++) {
+            const uploadFile = uploadFiles[i];
+
+            const imgLink = uploadFile.getAttribute("data-src")
+
+            str += `<input type='hidden' name='fileNames' value="${imgLink}">`
+
+        }
+
+        target.innerHTML = str; //form태그에 hidden태그로 첨부파일넣고, 같이 전송하는 듯?
+
+        document.querySelector("form").submit();
+
+    },false);
 
 
 <!--  post 요청에서 error가 있어서 register페이지로 리다이렉트된 경우 -->
