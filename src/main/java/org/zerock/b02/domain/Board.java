@@ -30,7 +30,8 @@ public class Board extends BaseEntity {
 
     @OneToMany(mappedBy = "board", // BoardImage의 누구랑 mapped되는지 => BoardImage 의 board 필드
                 cascade = {CascadeType.ALL}, //상위(Board) -> 하위(BoardImage) 영속성 전이
-                fetch = FetchType.LAZY)  //지연로딩 하위는 필요 시, 쿼리날림
+                fetch = FetchType.LAZY,  //지연로딩 하위는 필요 시, 쿼리날림
+                orphanRemoval = true) //참조가 끊기면 삭제(즉, board가 제거되면 boardImage도 제거
     @Builder.Default //빌더로 빌드시 특정 값으로 초기화할 때 사용
     private Set<BoardImage> imageSet = new HashSet<>(); //어차피 이름이 겹칠 일이 없어서 Set일까?
 
