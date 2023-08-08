@@ -1,6 +1,7 @@
 package org.zerock.b02.repository.search;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPQLQuery;
 import lombok.extern.log4j.Log4j2;
@@ -11,9 +12,12 @@ import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport
 import org.zerock.b02.domain.Board;
 import org.zerock.b02.domain.QBoard;
 import org.zerock.b02.domain.QReply;
+import org.zerock.b02.dto.BoardImageDTO;
+import org.zerock.b02.dto.BoardListAllDTO;
 import org.zerock.b02.dto.BoardListReplyCountDTO;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.zerock.b02.domain.QBoard.board;
 
@@ -189,6 +193,94 @@ public class BoardSearchImpl extends QuerydslRepositorySupport implements BoardS
 
         return new PageImpl<>(dtoList, pageable, count);
 
+    }
+
+    /**
+     * List<Tuple>을 사용하는게 Projections을 사용하는 것 보다 번거롭지만 커스터마이징 가능하다는 장점
+     *
+     * Projection은 누구인가?
+     * - JPQL은 JPQL의 결과를 DTO로 바로 처리하는 Projection 기능 제공
+     * - JPQL을 추상화한 Querydsl 또한 Projections.bean() 을 이용해서 한번에 DTO로 처리해준다.
+     * - 사용하기 위해서는 JPQL의 JPQLQuery 객체의 select() 메서드를 이용
+     *
+     * => 즉, JPQL 수행결과를 Projection을 통해 DTO로 바꿀 수도 있고 List<Tuple>을 이용할 수도 있다
+     *    밑에 보면 tuple을 map함수를 통해 list로 변환해서 dto에 담아주고 있드아.
+     */
+    @Override
+    public Page<BoardListAllDTO> searchWithAll(String[] types, String keyword, Pageable pageable) {
+
+        QBoard board = QBoard.board;
+        QReply reply = QReply.reply;
+
+        JPQLQuery<Board> boardJPQLQuery = from(board);
+        boardJPQLQuery.leftJoin(reply).on(reply.board.eq(board)); //left join
+
+        //검색 처리 (먼저, join으로 테이블 묶어놓은 다음 검색)
+        if( (types!=null && types.length >0) && keyword != null) {
+            BooleanBuilder booleanBuilder = new BooleanBuilder();
+
+            for(String type : types) {
+                switch (type) {
+                    case "t":
+                        booleanBuilder.or(board.title.contains(keyword));
+                        break;
+                    case "c":
+                        booleanBuilder.or(board.content.contains(keyword));
+                    case "w":
+                        booleanBuilder.or(board.writer.contains(keyword));
+                        break;
+                }
+            }
+            boardJPQLQuery.where(booleanBuilder);
+         }
+
+        boardJPQLQuery.groupBy(board); //게시물별로 묶어주고
+
+        getQuerydsl().applyPagination(pageable,boardJPQLQuery); //paging
+
+        JPQLQuery<Tuple> tupleJPQLQuery = boardJPQLQuery.select(board, reply.countDistinct());
+
+        //파이썬과 마찬가지로 자바의 tuple데이터구조도 변경불가능한 데이터 담을 때 사용(조회니까 사용하는 듯)
+        List<Tuple> tupleList = tupleJPQLQuery.fetch();
+
+        List<BoardListAllDTO> dtoList = tupleList.stream().map(tuple -> {
+
+            Board board1 = (Board) tuple.get(board);
+            //jpa query 결과가 tuple로 반환되는데 result tuple에서 index값으로 가져온다
+            //위에 쿼리보면, 특정번호(bno)의 replycount가져오랬으니까
+            long replyCount = tuple.get(1, Long.class); //1번 인덱스에 해당되는 튜플을 가져옴
+
+            BoardListAllDTO dto = BoardListAllDTO.builder()
+                    .bno(board1.getBno())
+                    .title(board1.getTitle())
+                    .writer(board1.getWriter())
+                    .regDate(board1.getRegDate())
+                    .replyCount(replyCount)
+                    .build();
+
+            //BoardImage를 BoardImageDTO 처리할 부분
+            List<BoardImageDTO> imageDTOS = board1.getImageSet().stream().sorted().map(boardImage -> BoardImageDTO.builder()
+                    .uuid(boardImage.getUuid())
+                    .fileName(boardImage.getFileName())
+                    .ord(boardImage.getOrd()).
+                    build()).collect(Collectors.toList());
+
+            dto.setBoardImages(imageDTOS); //처리된 BoardImageDTO들 추가
+
+            return dto;
+
+        }).collect(Collectors.toList());
+
+        long totalCount = boardJPQLQuery.fetchCount(); // Paging처리할 때 totalCount 필요
+
+        return new PageImpl<>(dtoList,pageable,totalCount);
+
+//        boardList.forEach(board1 -> {
+//            log.info("board.bno={}",board1.getBno());
+//            log.info("board.imageSet={}",board1.getImageSet());
+//            log.info("=============================");
+//        });
+//        return null;
     }
 
 

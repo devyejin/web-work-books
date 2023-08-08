@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Commit;
 import org.zerock.b02.domain.Board;
+import org.zerock.b02.dto.BoardListAllDTO;
 import org.zerock.b02.dto.BoardListReplyCountDTO;
 
 import javax.transaction.Transactional;
@@ -123,7 +124,7 @@ class BoardRepositoryTest {
         //given
         Pageable pageable = PageRequest.of(0, 10, Sort.by("bno").descending());
 
-        String[] types = {"t","c","w"};
+        String[] types = {"t", "c", "w"};
         String keyword = "1";
 
         Page<Board> result = boardRepository.searchAll(types, keyword, pageable);
@@ -138,7 +139,7 @@ class BoardRepositoryTest {
         log.info(result.getNumber());
 
         //prev next 유무 ( = 기호가 아니라 : 기호임)
-        log.info("result.hasPrevious : {}, result.hasNext : {}", result.hasPrevious(),result.hasNext());
+        log.info("result.hasPrevious : {}, result.hasNext : {}", result.hasPrevious(), result.hasNext());
 
         result.getContent().forEach(board -> log.info(board));
 
@@ -148,9 +149,9 @@ class BoardRepositoryTest {
     @DisplayName("검색조건 넣고 검색해서 목록 반환할건데, reply 달린 갯수도 함께 출력")
     void testSearchWithReplyCount() {
         //given
-        String[] types = {"t","w","c"}; // title, writer, content 다 포함해서 검색 가정
+        String[] types = {"t", "w", "c"}; // title, writer, content 다 포함해서 검색 가정
         String keyword = "1";
-        Pageable pageable = PageRequest.of(0,10,Sort.by("bno").descending());
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("bno").descending());
 
         //when
         Page<BoardListReplyCountDTO> result = boardRepository.searchWithReplyCount(types, keyword, pageable);
@@ -158,10 +159,10 @@ class BoardRepositoryTest {
         //then
 //        Assertions.assertNotNull(result); //뭐라도 걸리는 데이터 있겠지..
 
-        log.info("totalPage={}",result.getTotalPages());
+        log.info("totalPage={}", result.getTotalPages());
         log.info("size={}", result.getSize()); //page size
         log.info("page number={}", result.getNumber()); //page number
-        log.info("result.hasPrevious()={}, result.hasNext()={}", result.hasPrevious(),result.hasNext());
+        log.info("result.hasPrevious()={}, result.hasNext()={}", result.hasPrevious(), result.hasNext());
 
 
         result.getContent().forEach(board -> log.info(board));
@@ -169,7 +170,7 @@ class BoardRepositoryTest {
 
     @Test
     @DisplayName("하나의 게시물에 첨부파일 3개 추가 테스트")
-    void testInsertWithImages(){
+    void testInsertWithImages() {
 
         //given
         Board board = Board.builder()
@@ -179,8 +180,8 @@ class BoardRepositoryTest {
                 .build();
 
         //when
-        for(int i=0; i<3; i++) {
-            board.addImage(UUID.randomUUID().toString(), "file"+i+".jpeg");
+        for (int i = 0; i < 3; i++) {
+            board.addImage(UUID.randomUUID().toString(), "file" + i + ".jpeg");
         }
         Board savedBoard = boardRepository.save(board); //이때 쿼리문을 확인하면 board insert문 1번, board_image insert문 3번 나감
 
@@ -202,7 +203,7 @@ class BoardRepositoryTest {
         Optional<Board> result = boardRepository.findById(1L);
         Board board = result.orElseThrow();
 
-        log.info("board={}",board);
+        log.info("board={}", board);
         log.info("---------------이전에는 board_image table 조회 안하다가, 이후에 조회쿼리 나감"); //영속컨텍스트에서 데꾸와서 이 log이후에 찍히지는 않음..
         log.info("board.getImageSet={}", board.getImageSet());
 
@@ -213,7 +214,7 @@ class BoardRepositoryTest {
         Optional<Board> result = boardRepository.findByIdWithImages(1L);
         Board board = result.orElseThrow();
 
-        log.info("board={}",board);
+        log.info("board={}", board);
 
         //이 경우 @EntityGraph 으로 join처리되서 join 쿼리 나가고 board조회시 image도 다 조회해옴!
     }
@@ -234,13 +235,13 @@ class BoardRepositoryTest {
         //when(수정하고파)
         board.clearImage(); // 기존 파일 삭제
 
-        for(int i=0; i<5; i++) {
-            board.addImage(UUID.randomUUID().toString(),"updatefile"+i+".jpg");
+        for (int i = 0; i < 5; i++) {
+            board.addImage(UUID.randomUUID().toString(), "updatefile" + i + ".jpg");
         }
         Board saved = boardRepository.save(board);
 
         //then
-        log.info("saved={}",saved);
+        log.info("saved={}", saved);
         Assertions.assertThat(saved.getImageSet().size()).isEqualTo(5);
 
     }
@@ -260,5 +261,51 @@ class BoardRepositoryTest {
         boardRepository.deleteById(bno);
     }
 
+    @Test
+    @DisplayName("테스트용 더미데이터 생성, 5의배수게시물은 첨부파일 없음")
+    void testInsertAll() {
+
+        for (int i = 1; i <= 100; i++) {
+            Board board = Board.builder()
+                    .title("Titile is ..." + i)
+                    .content("Content is ..." + i)
+                    .writer("Writer is... star" + i)
+                    .build();
+
+            for (int j = 0; j < 3; j++) {
+                if (i % 5 == 0) continue;
+
+                board.addImage(UUID.randomUUID().toString(), i + "file" + j + ".jpg");
+            }
+
+            boardRepository.save(board);
+
+
+        }
+    }
+
+    /**
+     * N+1 문제가 발생 : Board 게시물 1개를 조회하려다 거기 딸린 N개의 곁다리조회발생 -> 성능저하
+     * 그래서! N번에 해당하는 쿼리를 모아서 한 번에 실행하는 기능 제공 => @BatchSize
+     * 즉 하위 필드 조회 쿼리를 N번 날리는게 아니라 하나의 쿼리에 조건을 in으로 묶어서 보냄!
+     * Board가 가지고있는 하위엔티티 필드에서 설정하겠쥬?
+     */
+    @Test
+    @Transactional
+    void testSearchImageReplyConut() {
+
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("bno").descending());
+//        boardRepository.searchWithAll(null,null,pageable);
+
+        String[] types = {"w", "c"};
+
+        Page<BoardListAllDTO> result = boardRepository.searchWithAll(types, "1", pageable);
+
+        log.info("-------------------------------");
+        log.info(result.getTotalElements());
+
+        result.getContent().forEach(boardListAllDTO -> log.info("boardListAllDTO={}",boardListAllDTO));
+
+    }
 
 }

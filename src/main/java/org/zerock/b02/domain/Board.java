@@ -1,6 +1,7 @@
 package org.zerock.b02.domain;
 
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -33,6 +34,7 @@ public class Board extends BaseEntity {
                 fetch = FetchType.LAZY,  //지연로딩 하위는 필요 시, 쿼리날림
                 orphanRemoval = true) //참조가 끊기면 삭제(즉, board가 제거되면 boardImage도 제거
     @Builder.Default //빌더로 빌드시 특정 값으로 초기화할 때 사용
+    @BatchSize(size = 20) //N+1문제 해결을 위해 N(size)만큼 모았다 한번에 처리!
     private Set<BoardImage> imageSet = new HashSet<>(); //어차피 이름이 겹칠 일이 없어서 Set일까?
 
     //상위 엔티티가 하위 엔티티를 관리하는 경우, 별도의 JPARepository추가X
