@@ -86,6 +86,8 @@ public class UpDownController {
     @GetMapping("/view/{fileName}")
     public ResponseEntity<Resource> viewFileGET(@PathVariable String fileName) {
 
+        log.info("첨부파일 조회 controller = viewFileGET 호출!!!");
+
 
         Resource resource = new FileSystemResource(uploadPath + File.separator + fileName);
         log.info("resource={}",resource);

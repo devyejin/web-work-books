@@ -37,6 +37,14 @@
                             <input type="text" class="form-control" th:value="${dto.writer}" name="writer" readonly>
                         </div>
 
+                        <!-- 수정 시 첨부파일을 추가하기도 하니까 -->
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">Images</span>
+                            <div class="float-end uploadHidden">
+                                <button type="button" class="btn btn-primary uploadFileBtn">ADD Files</button>
+                            </div>
+                        </div>
+
                         <div class="input-group mb-3">
                             <span class="input-group-text">RegDate</span>
                             <input type="text" class="form-control"
@@ -62,17 +70,111 @@
             </div><!--end card-->
         </div><!-- end col-->
     </div><!-- end row-->
-</div>
+
+    <!—- 첨부 파일 섬네일을 보여줄 부분 -->
+    <div class="row mt-3">
+        <div class="col ">
+            <div class="container-fluid d-flex uploadResult" style="flex-wrap: wrap;">
+                <th:block th:each="fileName:${dto.fileNames}">
+                    <div class="card col-4" th:with="arr = ${fileName.split('_')}">
+                        <div class="card-header d-flex justify-content-center"> [[${arr[1]}]]
+                            <button class="btn-sm btn-danger" th:onclick="removeFile([[${arr[0]}]],[[${arr[1]}]],this)">
+                                X
+                            </button> <!-- 여기서 this는 버튼 자체가 맞네! -->
+                        </div>
+                        <div class="card-body">
+                            <img th:src="|/view/s_${fileName}|" th:data-src="${fileName}">
+                        </div>
+                    </div><!-- card -->
+                </th:block>
+            </div>
+        </div>
+    </div>
+
+    <!—- 첨부파일 추가를 위한 모달창 -->
+    <div class="modal uploadModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload File</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group mb-3">
+                        <input type="file" name="files" class="form-control" multiple>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary uploadBtn">Upload</button>
+                    <button type="button" class="btn btn-outline-dark closeUploadBtn">Close</button>
+                </div>
+            </div>
+        </div>
+    </div><!-- register modal -->
+
+    <!--서버랑 비동기 통신하는 upload.js 파일 추가! -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script src="/js/upload.js"></script>
+
+</div> <!-- end layout fragement -->
+
 
 <script layout:fragment="script" th:inline="javascript">
+
+
+    //첨부파일 추가(업로드)를 위한 모달
+    const uploadModal = new bootstrap.Modal(document.querySelector(".uploadModal"));
+
+
+    document.querySelector(".uploadFileBtn").addEventListener("click", e => {
+
+        //모달 창을 띄워줘야행
+        e.stopPropagation();
+        e.preventDefault();
+
+        uploadModal.show();
+    }, false);
+
+
+    //모달창에서, 첨부파일을 추가하고 Upload 버튼을 누를 때 이벤트
+
+    document.querySelector(".uploadBtn").addEventListener("click", e => {
+
+        const formObj = new FormData(); // html에 form 태그가 있으면, 거기에 자동으로 추가해줌. form태그와 다를게 없다!
+        const fileInput = document.querySelector("input[name='files']"); //업로드 Modal에 input으로 등록한 것!
+
+        console.log(fileInput.files);
+
+        const files = fileInput.files;
+
+        for (let i = 0; i < files.length; i++) {
+            formObj.append("files", files[i]) //FormData객체의 경우, 동일한 name을 가진 value 여러개를 넣을 수 있음! (약간 체크박스같은 느낌)
+        }
+
+        //서버랑통신하는 메서드 호출(비동기)
+        uploadToServer(formObj).then(result => {
+            console.log(result); //JSON으로 응답 내려줄겨!
+
+            for (const uploadResult of result) {
+                showUploadFile(uploadResult); //업로드되면, 그 결과를 html로 출력해줌
+            }
+
+            uploadModal.hide();
+        }).catch(exception => {
+            uploadModal.hide(); //예외발생해도 우선 모달창은 닫음
+        })
+    }, false);
+
+
     //모델에 담긴건 바로 꺼내서 쓸 수가 있음
     const errors = [[${errors}]];
     console.log(errors);
 
     let errorMsg = '';
 
-    if(errors) {
-        for(let i=0; i<errors.length; i++) {
+    if (errors) {
+        for (let i = 0; i < errors.length; i++) {
             errorMsg += `${errors[i].field}는 ${errors[i].code}\n`
         }
         history.replaceState({}, null, null);
@@ -84,7 +186,7 @@
     const formObj = document.querySelector("#f1");
 
 
-    document.querySelector(".modBtn").addEventListener("click", e=>{
+    document.querySelector(".modBtn").addEventListener("click", e => {
         e.preventDefault();
         e.stopPropagation();
 
@@ -93,9 +195,9 @@
         formObj.method = 'post';
         formObj.submit();
 
-    },false);
+    }, false);
 
-//     삭제 버튼
+    //     삭제 버튼
     document.querySelector(".removeBtn").addEventListener("click", e => {
         e.preventDefault();
         e.stopPropagation();
@@ -103,16 +205,138 @@
         formObj.action = `/board/remove`;
         formObj.method = 'post';
         formObj.submit();
-    },false);
+    }, false);
 
 
-//     목록 버튼
-    document.querySelector(".listBtn").addEventListener("click", e=> {
+    //     목록 버튼
+    document.querySelector(".listBtn").addEventListener("click", e => {
         e.preventDefault();
         e.stopPropagation();
 
         formObj.reset();
         self.location = `/board/list?${link}`;
-    },false)
+    }, false)
+
+    //modify페이지 첨부파일 상단 x 표시 클릭시 서버에서 파일 삭제하도록
+    //최종적으로 삭제될 파일들의 목록
+    const removeFileList = [];
+
+    function removeFile(uuid, fileName, obj) {
+
+        if (!confirm("파일을 삭제하시겠습니까?")) return; //true가 아니라면 return
+
+        console.log(`uuid : ${uuid}`);
+        console.log(`fileName : ${fileName}`);
+        console.log(`obj : ${obj}`) //<--위에서 this가 누구지 궁금했는데 로그찍고있네 ㅇㅎ 아마 버튼DOM아닐까? <-  [object HTMLButtonElement] 맞네 버튼자체!
+
+        removeFileList.push({uuid, fileName}); //removeFileList 배열에 {uuid, fileName} 객체 저장 <--즉, 삭제할 파일들 밀어넣음(체크된 거 기록!)
+
+        const targetDiv = obj.closest(".card"); //obj와 가장 가까운 class=card DOM 겟!
+        targetDiv.remove(); //태그만 삭제하는 듯!?
+
+        //우선, html에서만 제거하고, (화면상에서 x표시 누른거니까) db는 아직 삭제안함.
+        //html상에선 제거하고 removeFileList 이 배열객체에 파일정보를 임시로 담아놓는다
+
+    }
+
+    const uploadResult = document.querySelector(".uploadResult");
+
+    function showUploadFile({uuid, fileName, link}) {
+        const str = `<div class="card col-4">
+            <div class="card-header d-flex justify-content-center">
+                ${fileName}
+                <button class="btn-sm btn-danger" onclick="javascript:removeFile('${uuid}', '${fileName}', this)" >X</button>
+            </div>
+            <div class="card-body">
+                 <img src="/view/${link}" data-src="${uuid + "_" + fileName}" >
+            </div>
+        </div><!-- card -->`
+
+        uploadResult.innerHTML += str
+    }
+
+    //수정 버튼 이벤트
+    //수정시에는 추가하는 첨부파일 비동기 통신 appendFileData() 와, 삭제하는 파일 비동기 통신 callRemoveFiles() 필요!
+    document.querySelector(".modBtn").addEventListener("click", e => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        //formObj 는 form태그 DOM
+        formObj.action = `/board/modify?${link}`;
+
+        //추가할 첨부파일을 <input type=hidden>으로 form태그에 추가
+        appendFileData();
+
+        //삭제할 첨부파일들 삭제
+        callRemoveFiles();
+
+        formObj.method = 'post';
+        formObj.submit();
+
+    }, false);
+
+
+    function appendFileData() {
+
+        const target = document.querySelector(".uploadHidden");
+        const uploadFiles = uploadResult.querySelectorAll("img"); //첨부파일 썸네일 들
+
+        let str = '';
+
+        for (let i = 0; i < uploadFiles.length; i++) {
+            const uploadFile = uploadFiles[i];
+            const imgLink = uploadFile.getAttribute("data-src");
+
+            str += `<input type='hidden' name='fileNames' value="${imgLink}">`
+        }
+
+        target.innerHTML = str;
+    }
+
+    function callRemoveFiles() {
+
+        //removeFileList 수정창에서 썸네일 x눌렀을 때, 화면에서만 제거하고 그 정보들 담아놨던 배열, 이제 서버로 삭제하라고 보내는거지
+        removeFileList.forEach(({uuid, fileName}) => {
+            removeFileToServer({uuid, fileName}) //비동기 함수 removeFileToServer 호출
+        });
+    }
+
+    //게시물 삭제 이벤트 removeBtn
+    //게시물 삭제의 경우, 첨부파일 삭제도 해줘야함!
+    document.querySelector(".removeBtn").addEventListener("click", e => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        //화면에 보이는 파일들을 form태그에 추가 (첨부파일 데이터도 서버로 보내야 삭제하니까)
+        appendFileData();
+        //화면에 안 보이게 처리된 파일들을 form태그에 추가
+        appendNotShowData();
+
+        formObj.action = `/board/remove`;
+        formObj.method = 'post';
+        formObj.submit();
+
+
+    }, false)
+
+    function appendNotShowData() {
+
+        //removeFileList : 수정페이지에서 기존 첨부파일 x자 누르면, html상에서 제거하고 정보들 담아놓은 배열객체! 이걸 서버로 보내야 진짜 db에서 삭제
+
+        if (removeFileList.length == 0) return; //빈 배열이니 삭제할 게 없으면 return
+
+        const target = document.querySelector(".uploadHidden");
+        let str = '';
+
+        for(let i = 0; i < removeFileList.length; i++) {
+            const {uuid, fileName} = removeFileList[i];
+
+            str += `<input type='hidden' name='fileNames' value="${uuid}_${fileName}">`
+        }
+
+        target.innerHTML += str;
+
+    }
+
 
 </script>

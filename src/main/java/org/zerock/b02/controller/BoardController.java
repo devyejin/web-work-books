@@ -3,6 +3,9 @@ package org.zerock.b02.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -14,6 +17,10 @@ import org.zerock.b02.dto.*;
 import org.zerock.b02.service.BoardService;
 
 import javax.validation.Valid;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
 
 @Controller
 @RequestMapping("/board")
@@ -22,6 +29,10 @@ import javax.validation.Valid;
 public class BoardController {
 
     private final BoardService boardService;
+    
+    //첨부파일 삭제를 위해, 경로 주입 (application.properties)
+    @Value("${org.zerock.upload.path}") // 스프링프레임웤 지원 어노테이션
+    private String uploadPath;
 
     @GetMapping("/list")
     public void list(PageRequestDTO pageRequestDTO, Model model) {
@@ -113,15 +124,61 @@ public class BoardController {
 
     }
 
+//    @PostMapping("/remove")
+//    public String remove(Long bno, RedirectAttributes redirectAttributes) {
+//
+//        log.info("call remove post .... " + bno);
+//
+//        boardService.remove(bno);
+//
+//        redirectAttributes.addFlashAttribute("result", "removed");
+//
+//        return "redirect:/board/list";
+//    }
+    
+    //첨부파일 제거까지 담당, 이제 bno가 아닌 BoardDTO로 받아야함 ( 첨부파일에 대한 정보도 받아야하니까)
     @PostMapping("/remove")
-    public String remove(Long bno, RedirectAttributes redirectAttributes) {
+    public String remove(BoardDTO boardDTO, RedirectAttributes redirectAttributes) {
 
-        log.info("call remove post .... " + bno);
-
+        Long bno = boardDTO.getBno();
+        log.info( bno);
+        
         boardService.remove(bno);
+        
+        //게시물이 DB에서 삭제되었다면, 첨부파일도 삭제
+        log.info("boardDTO.getFileNames={}",boardDTO.getFileNames());
 
-        redirectAttributes.addFlashAttribute("result", "removed");
+        List<String> fileNames = boardDTO.getFileNames();
+        if(fileNames != null && fileNames.size() > 0) { //파일이 있다면 삭제해!
+            removeFiles(fileNames);
+        }
+        
+        redirectAttributes.addFlashAttribute("result", "removed"); //일회성으로 보내주면되니까 Flash 이용
+        
+        return "redirect:/board/list"; //PRG 또 삭제요청 들어가면 에러나니까 G으로 보내버리기
+    }
 
-        return "redirect:/board/list";
+
+    public void removeFiles(List<String> files) {
+        for(String fileName : files) {
+            Resource resource = new FileSystemResource(uploadPath + File.separator + fileName);
+            String resourceFilename = resource.getFilename();
+
+            try {
+                String contentType = Files.probeContentType(resource.getFile().toPath());
+                
+                resource.getFile().delete(); //첨부파일 삭제
+                
+                //썸네일이 존재하는 경우, 썸네일도 삭제 (그래서 contentType확인 이미지면 있으니까)
+                if(contentType.startsWith("image")) {
+                    File thumbnailFile = new File(uploadPath + File.separator + "s_" + fileName);
+                    
+                    thumbnailFile.delete(); //썸네일도 삭제 끝!
+                }
+                
+            } catch (IOException e) {
+               log.error(e);
+            }
+        }
     }
 }

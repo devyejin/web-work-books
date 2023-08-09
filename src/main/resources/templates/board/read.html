@@ -56,6 +56,14 @@
                         </div>
                     </div>
 
+<!--                    첨부파일 이미지 출력    -->
+                    <div class="col">
+                        <div class="card" th:if="${dto.fileNames != null && dto.fileNames.size() > 0}">
+                            <img class="card-img-top"
+                                 th:each="fileName: ${dto.fileNames}"
+                                 th:src="|/view/${fileName}|">
+                        </div>
+
 
                 </div><!--end card body-->
             </div><!--end card-->
@@ -139,6 +147,11 @@
 
 
 <script layout:fragment="script" th:inline="javascript">
+
+    import 'bootstrap';
+
+    import * as bootstrap from 'bootstrap';
+    window.bootstrap = bootstrap;
 
     const bno = [[${dto.bno}]];
 
