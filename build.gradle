@@ -58,6 +58,8 @@ dependencies {
     //썸네일 라이브러리
     implementation 'net.coobird:thumbnailator:0.4.16'
 
+    //security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
     //querydsl
     implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"

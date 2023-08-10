@@ -6,6 +6,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -49,6 +50,7 @@ public class BoardController {
         //view로 pageRequestDTO, responserDTO 둘 다 전달
     }
 
+    @PreAuthorize("hasRole('USER')") //Config에서 어노테이션을 통해 권한 부여한다는 @EnableGlobalMethodSecurity 설정을 했기 때문에 사용 가능! , 글구 pre라 사전 체크
     @GetMapping("/register")
     public void registerGet() {
 

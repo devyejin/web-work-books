@@ -108,7 +108,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p th:text="|${result}번 게시물이 등록되었습니다.|"></p>
+                    <div th:if="${result} > 0">
+                        <p th:text="|${result}번 게시물이 등록되었습니다.|"></p>
+                    </div>
+                    <div th:if="${result} == 'removed'">
+                        <p th:text="게시글이 삭제되었습니다"></p>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -121,7 +126,8 @@
 </div>
 
 <script layout:fragment="script" th:inline="javascript">
-    <!-- 페이지번호 클릭시 form태그에 hidden 태그로 으로 page 추가한 후 submit -->
+    // <!-- 페이지번호 클릭시 form태그에 hidden 태그로 으로 page 추가한 후 submit -->
+
     document.querySelector(".pagination").addEventListener("click", e => {
         e.preventDefault();
         e.stopPropagation();
@@ -156,6 +162,7 @@
     const modal = new bootstrap.Modal(document.querySelector(".modal"));
 
     if(result) {
+        console.log(result);
         modal.show();
     }
 </script>
