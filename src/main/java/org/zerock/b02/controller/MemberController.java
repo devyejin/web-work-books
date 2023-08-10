@@ -23,7 +23,7 @@ public class MemberController {
         log.info("logout={}",logout);
 
         //로그아웃 여부를 확인하고싶다면 logout arguments 이용
-        //로그아웃하고프면 /member/login?logout 요청 (파라미터니까 ?로 )
+        //로그아웃하고프면  다이렉트로 /logout요청
         if(logout != null) {
             log.info("user logout state.........");
         }

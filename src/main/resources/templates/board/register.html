@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/basic.html}">
 
@@ -30,7 +31,8 @@
 
                         <div class="input-group mb-3">
                             <span class="input-group-text">Writer</span>
-                            <input type="text" name="writer" class="form-control" placeholder="Writer">
+                            <input type="text" name="writer" class="form-control" placeholder="Writer"
+                            th:value="${#authentication.principal.username}" readonly>
 
                         </div>
 
@@ -94,6 +96,25 @@
 </div> <!-- layout fragment end -->
 
 <script layout:fragment="script" th:inline="javascript">
+
+    const auth = [[${#authentication}]] //인증정보 이용(스프링시큐리티) <-- js보면 사용자정보가 객체로 담겨있음!
+    //JS에서 로그인한 사용자 정보가 필요하다면 ${#authentication.principal} 를 이용!
+
+
+
+
+    <!--  post 요청에서 error가 있어서 register페이지로 리다이렉트된 경우 -->
+    const errors = [[${errors}]]; <!-- 객체를 변수에 담을 수 있으니까-->
+    console.log(errors);
+
+    let errorMsg = '';
+
+    if(errors) {
+        for(let i=0; i<errors.length; i++) {
+            errorMsg += `${errors[i].field}는(은) ${errors[i].code}\n`
+        }
+        alert(errorMsg);
+    }
 
 
     //첨부파일 업로드 버튼 클릭시, 모달창 띄우는 이벤트
@@ -195,18 +216,7 @@
     },false);
 
 
-<!--  post 요청에서 error가 있어서 register페이지로 리다이렉트된 경우 -->
-  const errors = [[${errors}]]; <!-- 객체를 변수에 담을 수 있으니까-->
-  console.log(errors);
 
-  let errorMsg = '';
-
-  if(errors) {
-    for(let i=0; i<errors.length; i++) {
-      errorMsg += `${errors[i].field}는(은) ${errors[i].code}\n`
-    }
-    alert(errorMsg);
-  }
 
 
 

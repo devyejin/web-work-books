@@ -108,7 +108,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div th:if="${result} > 0">
+                    <div th:if="${result} != null and ${result} > 0">
                         <p th:text="|${result}번 게시물이 등록되었습니다.|"></p>
                     </div>
                     <div th:if="${result} == 'removed'">

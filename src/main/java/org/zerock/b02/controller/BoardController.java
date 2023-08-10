@@ -85,6 +85,7 @@ public class BoardController {
         return "redirect:/board/list";
     }
 
+    @PreAuthorize("isAuthenticated()") //로그인한 사용자만 접근 가능
     @GetMapping({"/read", "/modify"})
     public void read(Long bno, PageRequestDTO pageRequestDTO, Model model) {
         BoardDTO boardDTO = boardService.readOne(bno);
@@ -94,6 +95,7 @@ public class BoardController {
     }
 
     //수정 후에는 검색조건이 변경되기때문에, list페이지로 보낼 때 평범한 첫 페이지로
+    @PreAuthorize("principal.username == #boardDTO.writer") //사용자 불일치시 403(access denied exception발생 => handler에서 처리해주자 : 권한문제)
     @PostMapping("/modify")
     public String modify(PageRequestDTO pageRequestDTO,
                        @Valid BoardDTO boardDTO,
@@ -139,6 +141,7 @@ public class BoardController {
 //    }
     
     //첨부파일 제거까지 담당, 이제 bno가 아닌 BoardDTO로 받아야함 ( 첨부파일에 대한 정보도 받아야하니까)
+    @PreAuthorize("principal.username == #boardDTO.writer")
     @PostMapping("/remove")
     public String remove(BoardDTO boardDTO, RedirectAttributes redirectAttributes) {
 

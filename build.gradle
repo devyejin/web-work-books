@@ -61,6 +61,8 @@ dependencies {
     //security
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5'
+
     //querydsl
     implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
 
