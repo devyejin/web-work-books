@@ -12,10 +12,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.zerock.b02.security.CustomUserDetailService;
 import org.zerock.b02.security.handler.Custom403Handler;
+import org.zerock.b02.security.handler.CustomSocialLoginSucessHandler;
 
 import javax.sql.DataSource;
 
@@ -48,6 +50,7 @@ public class CustomSecurityConfig {
         //이 책 예제에서는 이 코드까지 반영하면 번거롭기때문에 무시하고 진행, CSRF 안한다는 설정 (실무코드는 해야함)
         http.csrf().disable();
 
+
         //자동로그인처리 시큐리티가 제공하는 rememberMe 사용
         http.rememberMe()
                 .key("12345678")
@@ -55,6 +58,9 @@ public class CustomSecurityConfig {
                 .userDetailsService(userDetailService)
                 .tokenValiditySeconds(60*60*24*30); //토큰(쿠키) 유효시간
 
+        http.oauth2Login()
+                .loginPage("/member/Login") //OAuth2를 이용해서 로그인한다는 설정
+                .successHandler(authenticationSuccessHandler()); //로그인 성공하면 successHandler 처리
 
         return http.build();
     }
@@ -86,5 +92,10 @@ public class CustomSecurityConfig {
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
         return new Custom403Handler();
+    }
+
+    @Bean
+    public AuthenticationSuccessHandler authenticationSuccessHandler() {
+        return new CustomSocialLoginSucessHandler(passwordEncoder());
     }
 }
