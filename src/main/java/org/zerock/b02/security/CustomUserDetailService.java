@@ -1,8 +1,10 @@
 package org.zerock.b02.security;
 
+import groovyjarjarantlr4.v4.codegen.model.LabeledOp;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -10,6 +12,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.zerock.b02.domain.Member;
+import org.zerock.b02.repository.MemberRepository;
+import org.zerock.b02.security.dto.MemberSecurityDTO;
+
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * UserDetailsService 인터페이스 : loadUserByUsername() 메서드 하나만 제공하는 함수형 인터페이스 (함수형 맞나?)
@@ -26,28 +34,66 @@ import org.springframework.stereotype.Service;
 
 @Log4j2
 @Service
+@RequiredArgsConstructor
 public class CustomUserDetailService implements UserDetailsService {
 
-    private PasswordEncoder passwordEncoder; //생성자 주입 방식
+//    private PasswordEncoder passwordEncoder; //생성자 주입 방식
 
-    public CustomUserDetailService() {
-        this.passwordEncoder = new BCryptPasswordEncoder();
-    }
+//    public CustomUserDetailService() {
+//        this.passwordEncoder = new BCryptPasswordEncoder();
+//    }
+    //--> 비밀번호 암호화는   ...? 어디서,,?
+
+
+//    @Override
+//    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+//
+//        log.info("loadUserByUsername={}", username);
+//
+//        //지금은 DB에서 찾아서 반환할 사용자정보가 없으므로, 서버에서 임시로 사용자 만들어서 반환
+//        //그러면, 이제 내부에서 로그인처리할 때 존재하는 user가 있고 -> 비번이 있으니 로그인처리가 되겠지
+//        UserDetails userDetails = User.builder()
+//                .username("user1")
+////                .password("1111") 스프링 시큐리티는 기본적으로 PWD 암호화가 필수
+//                .password(passwordEncoder.encode("1111"))
+//                .authorities("ROLE_USER")
+//                .build();
+//
+//        return userDetails;
+//    }
+
+
+    private final MemberRepository memberRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        log.info("loadUserByUsername={}", username);
+        log.info("username={}",username);
 
-        //지금은 DB에서 찾아서 반환할 사용자정보가 없으므로, 서버에서 임시로 사용자 만들어서 반환
-        //그러면, 이제 내부에서 로그인처리할 때 존재하는 user가 있고 -> 비번이 있으니 로그인처리가 되겠지
-        UserDetails userDetails = User.builder()
-                .username("user1")
-//                .password("1111") 스프링 시큐리티는 기본적으로 PWD 암호화가 필수
-                .password(passwordEncoder.encode("1111"))
-                .authorities("ROLE_USER")
-                .build();
+        Optional<Member> result = memberRepository.getWithRoles(username);
 
-        return userDetails;
+        if(result.isEmpty()){ //해당 아이디 회원이 없다면 ( 회원존재여부부터 확인 후 pwd 확인 <-- 시큐리티 방식)
+            throw new UsernameNotFoundException("username not found !!");
+        }
+
+        Member member = result.get();
+
+        //DTO로 다시 던져줘야쥬
+        MemberSecurityDTO memberSecurityDTO = new MemberSecurityDTO(member.getMid(),
+                member.getMpw(),
+                member.getEmail(),
+                member.isDel(),
+                member.isSocial(),
+                member.getRoleSet().stream().map(memberRope ->
+                                new SimpleGrantedAuthority("ROLE_" + memberRope.name()))
+                        .collect(Collectors.toList())
+        );
+
+        log.info("memberSecurityDTO={}",memberSecurityDTO);
+
+        return memberSecurityDTO;
+
     }
+
+
 }
