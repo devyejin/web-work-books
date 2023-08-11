@@ -15,4 +15,6 @@ public class JWTUtil {
 
     @Value("${org.zerock.jwt.secret}")
     private String key;
+
+
 }
