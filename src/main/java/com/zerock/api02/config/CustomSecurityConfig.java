@@ -3,6 +3,7 @@ package com.zerock.api02.config;
 import com.zerock.api02.APILoginSuccessHandler;
 import com.zerock.api02.filter.APILoginFilter;
 import com.zerock.api02.security.APIUserDetailService;
+import com.zerock.api02.util.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -32,6 +33,8 @@ public class CustomSecurityConfig {
     private final APIUserDetailService apiUserDetailService; //filter 계층에서 로그인인층 처리를 해주려면 Authentication Manager가 필요함
     //그런데, Authentication Manager는 APIUserDetailService를 이용해서 생성할 수 있음
     //그래서, filter계층에서 써야하므로, Config에 APIUserDetailService를 주입받은 후 Mnager를 등록
+
+    private final JWTUtil jwtUtil;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -70,7 +73,7 @@ public class CustomSecurityConfig {
 
 
         //APILoginSuccessHandler 등록
-        APILoginSuccessHandler successHandler = new APILoginSuccessHandler();
+        APILoginSuccessHandler successHandler = new APILoginSuccessHandler(jwtUtil); //핸들러에서 jwtUtil을 사용하므로 주입해줘야함!
         apiLoginFilter.setAuthenticationSuccessHandler(successHandler); //등록
 
 
