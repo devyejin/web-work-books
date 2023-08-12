@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * 하나의 요청에 대해 한번씩 동작하는 필터
+ * OncePerRequestFilter : 하나의 요청에 대해 한번씩 동작하는 필터
  * JWT 토큰을 검사하는 역할 ( 유효기간 등 ) => JWTUtil 의 validateToken() 기능 이용
  *
  * 밑에 로직에 의해 /api/** 로 들어오는 요청들은 TokenCheckFilter 필터를 거침!
@@ -49,14 +49,17 @@ public class TokenCheckFilter extends OncePerRequestFilter { //마찬가지로 T
         log.info("Token Check Filter............");
         log.info("jwtUtil={}", jwtUtil);
 
+
+
         try {
             validateAccessToken(request);
+
             filterChain.doFilter(request,response);
         } catch (AccessTokenException accessTokenException) {
             accessTokenException.sendResponseError(response); //클라이언트한테 에러 response
         }
 
-        filterChain.doFilter(request, response);
+
     }
 
     //access token 검증, 검증하다 에러나면 에러처리
@@ -64,12 +67,12 @@ public class TokenCheckFilter extends OncePerRequestFilter { //마찬가지로 T
 
         String headerStr = request.getHeader("Authorization");
 
-        if (headerStr == null || headerStr.length() <= 0) {
+        if (headerStr == null || headerStr.length() < 8) {
             throw new AccessTokenException(AccessTokenException.TOKEN_ERROR.UNACCEPT);
         }
 
         //Bearer 생략
-        String tokenType = headerStr.substring(0, 1);
+        String tokenType = headerStr.substring(0, 6);
         String tokenStr = headerStr.substring(7);
 
         if (tokenType.equalsIgnoreCase("Bearer") == false) { // jwt가 Bearer type이라 아닌것들 필터링

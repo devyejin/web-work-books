@@ -2,6 +2,7 @@ package com.zerock.api02.config;
 
 import com.zerock.api02.APILoginSuccessHandler;
 import com.zerock.api02.filter.APILoginFilter;
+import com.zerock.api02.filter.RefreshTokenFilter;
 import com.zerock.api02.filter.TokenCheckFilter;
 import com.zerock.api02.security.APIUserDetailService;
 import com.zerock.api02.util.JWTUtil;
@@ -81,8 +82,11 @@ public class CustomSecurityConfig {
         //APILoginFilter의 위치 조정 (지정된 필터 앞에 필터 추가) (추가하는필터, 지정된 필터)  => 추가필터 -> 지정필터순으로 처리 (api 로그인 우선 처리)
         http.addFilterBefore(apiLoginFilter, UsernamePasswordAuthenticationFilter.class);
 
-        //api로 시작하는 모든 경로는 TokenCheckFilter ehdwkr
+        //api로 시작하는 모든 경로는 TokenCheckFilter 등록
         http.addFilterBefore(tokenCheckFilter(jwtUtil),UsernamePasswordAuthenticationFilter.class);
+
+        //RefreshTokenFilter 호출 처리, 이 필터가 jwt관련 필터들 중 최전방 => refresh -> tokenCheck -> apiLogin
+        http.addFilterBefore(new RefreshTokenFilter("/refreshToken",jwtUtil),TokenCheckFilter.class);
 
 
         http.csrf().disable(); // csrf 토큰 비활성화
