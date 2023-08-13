@@ -1,4 +1,4 @@
-package com.zerock.api02;
+package com.zerock.api02.controller;
 
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.GetMapping;
