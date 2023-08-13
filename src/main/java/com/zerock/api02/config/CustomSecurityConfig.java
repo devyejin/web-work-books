@@ -2,6 +2,7 @@ package com.zerock.api02.config;
 
 import com.zerock.api02.APILoginSuccessHandler;
 import com.zerock.api02.filter.APILoginFilter;
+import com.zerock.api02.filter.RefreshTokenFilter;
 import com.zerock.api02.filter.TokenCheckFilter;
 import com.zerock.api02.security.APIUserDetailService;
 import com.zerock.api02.util.JWTUtil;
@@ -21,6 +22,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 
 @EnableWebSecurity
@@ -81,14 +86,38 @@ public class CustomSecurityConfig {
         //APILoginFilter의 위치 조정 (지정된 필터 앞에 필터 추가) (추가하는필터, 지정된 필터)  => 추가필터 -> 지정필터순으로 처리 (api 로그인 우선 처리)
         http.addFilterBefore(apiLoginFilter, UsernamePasswordAuthenticationFilter.class);
 
-        //api로 시작하는 모든 경로는 TokenCheckFilter ehdwkr
+        //api로 시작하는 모든 경로는 TokenCheckFilter 등록
         http.addFilterBefore(tokenCheckFilter(jwtUtil),UsernamePasswordAuthenticationFilter.class);
 
+        //RefreshTokenFilter 호출 처리, 이 필터가 jwt관련 필터들 중 최전방 => refresh -> tokenCheck -> apiLogin
+        http.addFilterBefore(new RefreshTokenFilter("/refreshToken",jwtUtil),TokenCheckFilter.class);
 
+
+
+        //csrf(cross-site request forgery protection)
         http.csrf().disable(); // csrf 토큰 비활성화
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // STATELESS = 세션을 사용하지 않음
 
+        //cors(corss original resource site
+        http.cors(httpSecurityCorsConfigurer -> {
+            httpSecurityCorsConfigurer.configurationSource(corsConfiguration());
+        });
+
         return http.build();
+    }
+
+    @Bean
+    public UrlBasedCorsConfigurationSource corsConfiguration() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("HEAD","GET","POST","PUT","DELETE"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization","Cache-Control","Content-Type"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**",configuration);
+        return source;
+
     }
 
     private TokenCheckFilter tokenCheckFilter(JWTUtil jwtUtil) {

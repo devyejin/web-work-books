@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div class="result">
+
+</div>
+
+<button class="btn1">CALL SERVER</button>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    <!--  발급받은 access Token을 이용 -->
+
+    const callServer = async () => {
+        console.log("call server1 ....");
+
+        const accessToken = localStorage.getItem("accessToken");
+
+        //access Token 이 없는 경우
+        if (!accessToken) {
+            throw 'Cannot Find access Token';
+        }
+
+        //access Token이 있다면
+      const authHeader = {"Authorization": `Bearer ${accessToken}`};
+
+        try {
+          const response = await axios.get("http://localhost:8080/api/sample/doA", {headers : authHeader});
+          return response.data;
+
+        } catch(error) { //access Token은 있지만 Expired등 예외가 있는 경우
+          if(error.response.data.msg === 'Expired Token') {
+            console.log("Refresh Your Token");
+            throw error.response.data.msg;
+
+            //그리고 새로운 access Token을 발급받도록 처리
+            try {
+              await callRefresh(); //refreshToken 생성 호출
+              console.log("new tokens..........saved"); //새로운 토큰 저장 후 다시 기능 호출
+              return callServer();
+
+            } catch (refreshErr) {
+              throw refreshErr.response.data.msg;
+            }
+
+          }
+        }
+
+    }
+
+    // access 토큰 새로 발급
+    const callRefresh = async () => {
+
+      const accessToken = localStorage.getItem("accessToken");
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      const tokens = {accessToken, refreshToken};
+      const res = await axios.post("http://localhost:8080/refreshToken",tokens);
+
+      localStorage.setItem("accessToken", res.data.accessToken);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
+
+
+    }
+
+
+    const resultDiv = document.querySelector(".result");
+
+    document.querySelector(".btn1").addEventListener("click", () => {
+        callServer().then(result => {
+          console.log(`result : ${result}`);
+        }).catch(error => {
+          alert(error)
+        })
+    }, false);
+
+
+</script>

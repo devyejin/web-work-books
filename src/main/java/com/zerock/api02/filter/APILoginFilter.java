@@ -57,7 +57,7 @@ public class APILoginFilter extends AbstractAuthenticationProcessingFilter {
                 jsonData.get("mid"),
                 jsonData.get("mpw"));
 
-        return getAuthenticationManager().authenticate(authenticationToken); //매니저한테 넘기면 다음 필터로 전달?
+        return getAuthenticationManager().authenticate(authenticationToken); //매니저한테 넘기면 다음 필터로 전달? -> APISuccessHandler가 토큰 생성
         
 
     }

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+
+<h1>ACCESS TOKEN</h1>
+
+<h3 class="accessOld"></h3>
+
+<h3 class="accessResult"></h3>
+
+<hr/>
+
+<h1>REFRESH TOKEN</h1>
+
+<h3 class="refreshOld"></h3>
+
+<h3 class="refreshResult"></h3>
+
+<button class="btn1">Refresh</button>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+  const oldAccessToken = localStorage.getItem("accessToken");
+  const oldRefreshToken = localStorage.getItem("refreshToken");
+
+  console.log(oldAccessToken,oldRefreshToken);
+
+  document.querySelector(".accessOld").innerHTML = oldAccessToken
+  document.querySelector(".refreshOld").innerHTML = oldRefreshToken
+
+  document.querySelector(".btn1").addEventListener("click", () => {
+
+    axios.post('http://localhost:8080/refreshToken',
+            {accessToken: oldAccessToken, refreshToken : oldRefreshToken})
+            .then(result => {
+              console.log(`result.data : ${result.data}`);
+
+              const newAccessToken = result.data.accessToken;
+              const newRefreshToken = result.data.refreshToken;
+
+              document.querySelector(".accessResult").innerHTML =
+                      oldAccessToken!==newAccessToken ? newAccessToken:'OLD' //만료되서 새로운걸 받았으면 새로운토큰값 출력, 만료안되서 기존거라면 문자열 'OLD'출력
+              document.querySelector(".refreshResult").innerHTML =
+                      oldRefreshToken!==newRefreshToken ? newRefreshToken:'OLD'
+            }).catch( error => {
+              console.error(`error : ${error}`);
+    })
+  },false);
+
+</script>

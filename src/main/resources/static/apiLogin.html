@@ -15,7 +15,14 @@
     };
 
     // 이거 테스트해볼 때 apiLogin.html 페이지 들어가려면 ~/files/apiLogin.html로 들어가야함 ( ServletConfig에서 static 경로를 /files/**로 잡아놔서!)
-      axios.post("http://localhost:8080/generateToken",data);
+      axios.post("http://localhost:8080/generateToken",data).then(result => {
+          const accessToken = result.data.accessToken;
+          const refreshToken = result.data.refreshToken;
+
+          //발급받은 token(jwt)를 localStorage에 저장
+          localStorage.setItem("accessToken",accessToken);
+          localStorage.setItem("refreshToken",refreshToken);
+      });
 
   },false)
 
