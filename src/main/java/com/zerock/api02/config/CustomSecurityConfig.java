@@ -92,8 +92,6 @@ public class CustomSecurityConfig {
         //RefreshTokenFilter 호출 처리, 이 필터가 jwt관련 필터들 중 최전방 => refresh -> tokenCheck -> apiLogin
         http.addFilterBefore(new RefreshTokenFilter("/refreshToken",jwtUtil),TokenCheckFilter.class);
 
-
-
         //csrf(cross-site request forgery protection)
         http.csrf().disable(); // csrf 토큰 비활성화
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // STATELESS = 세션을 사용하지 않음
