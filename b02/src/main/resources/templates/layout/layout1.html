@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>레이아웃 페이지</title>
+</head>
+<body>
+
+<div>
+  <h3>Sample Layout Header</h3>
+</div>
+
+<div layout:fragment="content"> <!-- layout에 이름이 content인 fragment를 갖다 사용하겠다 -->
+  <p>Page content goes here</p>
+</div>
+
+<div>
+  <h3>Sample Layout Footer</h3>
+</div>
+
+<th:block layout:fragment="script" >  <!-- layout에 이름이 script인 fragment를 갖다 사용하겠다 -->
+
+</th:block>
+
+</body>
+</html>
