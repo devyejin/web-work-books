@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h4 th:text="${list}"></h4>
+<br>
+<h4>${list}</h4> <!--/* 주석, 파싱될 때 미표기 (타임리프지원)  */-->
+<h4>[[${list}]]</h4> <!-- 주석, 파싱될 때 표기 -->
+
+<ul th:each="str : ${list}">
+    <li th:text="${str}"></li>
+</ul>
+
+<ul>
+    <th:block th:each="str, status : ${list}">
+            <li>[[${status.index}]] -- [[${str}]]</li> <!-- <li th:text=${str} > -->
+    </th:block>
+</ul>
+</body>
+</html>
